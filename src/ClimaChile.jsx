@@ -236,6 +236,20 @@ const ClimaChile = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (climaCiudad) {
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.async = true;
+      script.src = `https://www.weatherapi.com/weather/widget.ashx?loc=${climaCiudad.location.lat},${climaCiudad.location.lon}&wid=4&tu=1&div=weatherapi-weather-widget-4`;
+      const widgetDiv = document.getElementById('weatherapi-weather-widget-4');
+      if (widgetDiv) {
+        widgetDiv.innerHTML = ''; // Limpia antes de insertar
+        widgetDiv.appendChild(script);
+      }
+    }
+  }, [climaCiudad]);
+
   // Encontrar ciudades con temperaturas extremas (según pronóstico del día, no actual)
   const ciudadMasFria = climasPrincipales.length > 0
     ? climasPrincipales.reduce((prev, current) =>
@@ -377,6 +391,25 @@ const ClimaChile = () => {
                 alt={climaCiudad.current.condition.text}
                 style={{ width: 90, height: 90, margin: '18px auto 0 auto', display: 'block' }}
               />
+              {/* Widget WeatherAPI para la ciudad actual */}
+              <div style={{
+                margin: '24px auto 0 auto',
+                maxWidth: 600,
+                borderRadius: 12,
+                overflow: 'hidden',
+                boxShadow: '0 2px 16px rgba(30,60,114,0.15)',
+                background: '#fff'
+              }}>
+                <div id="weatherapi-weather-widget-4"></div>
+                <noscript>
+                  <a
+                    href={`https://www.weatherapi.com/weather/q/${climaCiudad.location.name.replace(/\s/g, '-').toLowerCase()}-${climaCiudad.location.lat}${climaCiudad.location.lon}`}
+                    alt={`Hour by hour ${climaCiudad.location.name} weather`}
+                  >
+                    {`10 day hour by hour ${climaCiudad.location.name} weather`}
+                  </a>
+                </noscript>
+              </div>
             </Card>
 
             <div style={subtitleStyle}>Pronóstico próximos días</div>
