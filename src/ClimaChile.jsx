@@ -123,6 +123,92 @@ const ciudadesChile = ['Santiago', 'Valparaiso', 'Concepcion', 'La Serena', 'Ant
 
 Modal.setAppElement('#root');
 
+// Nuevo componente para la card principal
+const WeatherCard = ({ climaCiudad }) => {
+  useEffect(() => {
+    if (climaCiudad) {
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.async = true;
+      script.src = `https://www.weatherapi.com/weather/widget.ashx?loc=${climaCiudad.location.lat},${climaCiudad.location.lon}&wid=4&tu=1&div=weatherapi-weather-widget-4`;
+      const widgetDiv = document.getElementById('weatherapi-weather-widget-4');
+      if (widgetDiv) {
+        widgetDiv.innerHTML = '';
+        widgetDiv.appendChild(script);
+      }
+    }
+  }, [climaCiudad]);
+
+  if (!climaCiudad) return null;
+  const current = climaCiudad.current;
+  const forecastDays = climaCiudad.forecast.forecastday;
+
+  return (
+    <Card style={{ ...glassCard, textAlign: 'center', padding: 32, marginTop: 24 }}>
+      <Ciudad style={{ fontSize: 32, fontWeight: 700, color: '#1e3c72', letterSpacing: 1 }}>
+        {climaCiudad.location.name}
+      </Ciudad>
+      <Estado style={{ fontSize: 22, color: '#1e3c72', fontWeight: 600 }}>
+        {current.condition.text}
+      </Estado>
+      <WeatherIcon
+        src={current.condition.icon}
+        alt={current.condition.text}
+        style={{ width: 90, height: 90, margin: '18px auto 0 auto', display: 'block' }}
+      />
+      <div style={{ color: '#fff', margin: '12px 0', fontWeight: 600 }}>
+        Velocidad del viento: {current.wind_kph} km/h &nbsp;|&nbsp;
+        Precipitacion: {current.precip_mm} mm &nbsp;|&nbsp;
+        Presion atmosferica: {current.pressure_mb} mb &nbsp;|&nbsp;
+        Humedad: {current.humidity}% &nbsp;|&nbsp;
+        nubosidad: {current.cloud}% 
+        </div>
+      <Temperatura style={{ fontSize: 48, fontWeight: 800, color: '#ff7e5f', margin: '12px 0' }}>
+        {current.temp_c}°C
+      </Temperatura>
+      {/* Widget WeatherAPI para la ciudad actual */}
+      <div style={{
+        margin: '24px auto 0 auto',
+        maxWidth: 600,
+        borderRadius: 12,
+        overflow: 'hidden',
+        boxShadow: '0 2px 16px rgba(30,60,114,0.15)',
+        background: '#fff'
+      }}>
+        <div id="weatherapi-weather-widget-4"></div>
+        <noscript>
+          <a
+            href={`https://www.weatherapi.com/weather/q/${climaCiudad.location.name.replace(/\s/g, '-').toLowerCase()}-${climaCiudad.location.lat}${climaCiudad.location.lon}`}
+            alt={`Hour by hour ${climaCiudad.location.name} weather`}
+          >
+            {`10 day hour by hour ${climaCiudad.location.name} weather`}
+          </a>
+        </noscript>
+      </div>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        marginTop: 24,
+        background: 'rgba(255,255,255,0.10)',
+        borderRadius: 12,
+        padding: 12
+      }}>
+        {forecastDays.map((day, idx) => {
+          const date = new Date(day.date);
+          const dayName = date.toLocaleDateString('es-ES', { weekday: 'short' }).toUpperCase();
+          return (
+            <div key={idx} style={{ textAlign: 'center', minWidth: 80 }}>
+              <div style={{ color: '#1e3c72', fontWeight: 700 }}>{dayName}</div>
+              <img src={day.day.condition.icon} alt={day.day.condition.text} style={{ width: 36, height: 36 }} />
+              <div style={{ color: '#222', fontWeight: 600, fontSize: 16 }}>{day.day.avgtemp_c}°C</div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+};
+
 const ClimaChile = () => {
   const [busqueda, setBusqueda] = useState('');
   const [climaCiudad, setClimaCiudad] = useState(null);
@@ -235,20 +321,6 @@ const ClimaChile = () => {
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (climaCiudad) {
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.async = true;
-      script.src = `https://www.weatherapi.com/weather/widget.ashx?loc=${climaCiudad.location.lat},${climaCiudad.location.lon}&wid=4&tu=1&div=weatherapi-weather-widget-4`;
-      const widgetDiv = document.getElementById('weatherapi-weather-widget-4');
-      if (widgetDiv) {
-        widgetDiv.innerHTML = ''; // Limpia antes de insertar
-        widgetDiv.appendChild(script);
-      }
-    }
-  }, [climaCiudad]);
 
   // Encontrar ciudades con temperaturas extremas (según pronóstico del día, no actual)
   const ciudadMasFria = climasPrincipales.length > 0
@@ -376,57 +448,8 @@ const ClimaChile = () => {
 
         {climaCiudad && !buscando && (
           <>
-            <Card style={{ ...glassCard, textAlign: 'center', padding: 32, marginTop: 24 }}>
-              <Ciudad style={{ fontSize: 32, fontWeight: 700, color: '#1e3c72', letterSpacing: 1 }}>
-                {climaCiudad.location.name}
-              </Ciudad>
-              <Temperatura style={{ fontSize: 48, fontWeight: 800, color: '#ff7e5f', margin: '12px 0' }}>
-                {climaCiudad.current.temp_c}°C
-              </Temperatura>
-              <Estado style={{ fontSize: 22, color: '#1e3c72', fontWeight: 600 }}>
-                {climaCiudad.current.condition.text}
-              </Estado>
-              <WeatherIcon
-                src={climaCiudad.current.condition.icon}
-                alt={climaCiudad.current.condition.text}
-                style={{ width: 90, height: 90, margin: '18px auto 0 auto', display: 'block' }}
-              />
-              {/* Widget WeatherAPI para la ciudad actual */}
-              <div style={{
-                margin: '24px auto 0 auto',
-                maxWidth: 600,
-                borderRadius: 12,
-                overflow: 'hidden',
-                boxShadow: '0 2px 16px rgba(30,60,114,0.15)',
-                background: '#fff'
-              }}>
-                <div id="weatherapi-weather-widget-4"></div>
-                <noscript>
-                  <a
-                    href={`https://www.weatherapi.com/weather/q/${climaCiudad.location.name.replace(/\s/g, '-').toLowerCase()}-${climaCiudad.location.lat}${climaCiudad.location.lon}`}
-                    alt={`Hour by hour ${climaCiudad.location.name} weather`}
-                  >
-                    {`10 day hour by hour ${climaCiudad.location.name} weather`}
-                  </a>
-                </noscript>
-              </div>
-            </Card>
-
-            <div style={subtitleStyle}>Pronóstico próximos días</div>
-            <PronosticoCard style={{ ...mainGrid, background: 'rgba(255,255,255,0.10)', borderRadius: 16, padding: 16 }}>
-              {climaCiudad.forecast.forecastday.map((dia, i) => (
-                <Dia key={i} style={{ ...glassCard, padding: 18, minHeight: 180, textAlign: 'center' }}>
-                  <strong style={{ fontSize: 18, color: '#1e3c72' }}>
-                    {new Date(dia.date).toLocaleDateString('es-CL', { weekday: 'long' })}
-                  </strong>
-                  <p style={{ fontSize: 16, margin: '8px 0', color: '#222' }}>
-                    🌡️ {dia.day.mintemp_c}°C - {dia.day.maxtemp_c}°C
-                  </p>
-                  <img src={dia.day.condition.icon} alt={dia.day.condition.text} style={{ width: 56, height: 56 }} />
-                  <Estado style={{ color: '#1e3c72', fontWeight: 600 }}>{dia.day.condition.text}</Estado>
-                </Dia>
-              ))}
-            </PronosticoCard>
+            <WeatherCard climaCiudad={climaCiudad} />
+            
           </>
         )}
 
